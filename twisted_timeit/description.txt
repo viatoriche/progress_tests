@@ -1,0 +1,92 @@
+Напишите декоратор который пишет в лог время работы функции в twisted
+
+Если функция вернула deferred, то декоратор должен выдать сообщение о времени за которое будет получен результат этого deferred.
+Если функция генератор, нужно измерить время каждой итерации
+Если обычная функция, то случай тривиальный.
+Дополнительный вопрос:
+В какой очередности должны ставиться ваш декоратор и @defer.inlineCallbacks?
+Дополнительное задание:
+Сделать чтобы декоратор можно было вставить и до, и после @defer.inlineCallbacks.
+
+============================================
+
+SOLUTION
+
+============================================
+
+Для теста задачи:
+Создайте виртуальное окружение (virtualenv) и активируйте его, либо запустите pip install из-под root
+pip install -r requirements.txt
+trial test
+
+Ответ на доп. вопрос:
+Желательно вызывать после inlineCallbacks, так как можно будет увидеть результаты по всем вызовам.
+Если поставить декоратор перед inlineCallbacks, тогда мы увидим время выполнения лишь вызова callback у Deferred
+инстанса, который сформирует inlineCallbacks декоратор.
+
+Результаты моих тестов:
+
+$ trial test
+test
+  TwistedTimeitTest
+    test_deferred ...
+==============================
+Log from test_deferred:
+------------------------------
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for function defer_calc: 0.00003s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for deferred: 0.06820s
+
+==============================
+
+                                                     [OK]
+    test_inline_callbacks_after ...
+==============================
+Log from test_inline_callbacks [AFTER]:
+------------------------------
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for function yelding_calculation: 0.00001s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator yelding_calculation.send: 0.01401s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator yelding_calculation.send: 0.01368s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator yelding_calculation.send: 0.01390s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator yelding_calculation.send: 0.01401s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator yelding_calculation.send: 0.01358s
+
+==============================
+
+                                       [OK]
+    test_inline_callbacks_before ...
+==============================
+Log from test_inline_callbacks [BEFORE]:
+------------------------------
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for function yelding_calculation: 0.06843s
+
+==============================
+
+                                      [OK]
+    test_iteration ...
+==============================
+Log from test_iteration:
+------------------------------
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for function iteration: 0.00001s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator iteration.next: 0.01686s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator iteration.next: 0.01393s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator iteration.next: 0.01393s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator iteration.next: 0.01401s
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for iterator iteration.next: 0.01372s
+
+==============================
+
+                                                    [OK]
+    test_trivial ...
+==============================
+Log from test_trivial:
+------------------------------
+2015-08-29 00:56:06+0300     INFO:[twisted_timeit]: Time for function trivial: 0.01328s
+
+==============================
+
+                                                      [OK]
+
+-------------------------------------------------------------------------------
+Ran 5 tests in 0.308s
+
+PASSED (successes=5)
