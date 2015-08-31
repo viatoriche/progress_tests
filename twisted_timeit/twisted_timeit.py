@@ -65,8 +65,8 @@ class DeferredWrapper(object):
         )
 
 
-def twisted_timeit(f, *args, **kwargs):
-    def wrapper():
+def twisted_timeit(f):
+    def wrapper(*args, **kwargs):
         result = log_timeit(
             f,
             *args,
