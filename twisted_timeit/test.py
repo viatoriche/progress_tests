@@ -33,10 +33,10 @@ class TwistedTimeitTest(unittest.TestCase):
         log.addObserver(LevelFileLogObserver(stdout, logging.INFO))
 
         @twisted_timeit
-        def trivial():
-            return long_calculation(self.count_run)
+        def trivial(count):
+            return long_calculation(count)
 
-        self.assertEqual(trivial(), 2)
+        self.assertEqual(trivial(self.count_run), 2)
         result_log = stdout.getvalue()
         self.assertEqual('Time for function trivial' in result_log, True)
         print '\n', self.sep_line_two, '\nLog from test_trivial:\n', \
@@ -47,11 +47,11 @@ class TwistedTimeitTest(unittest.TestCase):
         log.addObserver(LevelFileLogObserver(stdout, logging.INFO))
 
         @twisted_timeit
-        def iteration():
-            for i in xrange(self.count_iteration):
-                yield long_calculation(self.count_run)
+        def iteration(count_iteration, count_run):
+            for i in xrange(count_iteration):
+                yield long_calculation(count_run)
 
-        for i in iteration():
+        for i in iteration(self.count_iteration, self.count_run):
             self.assertEqual(i, 2)
 
         result_log = stdout.getvalue()
@@ -70,13 +70,13 @@ class TwistedTimeitTest(unittest.TestCase):
 
 
         @twisted_timeit
-        def defer_calc():
+        def defer_calc(count_iteration, count_run):
             d = defer.Deferred()
-            for i in xrange(self.count_iteration):
-                d.addCallback(test_result, self.count_run)
+            for i in xrange(count_iteration):
+                d.addCallback(test_result, count_run)
             return d
 
-        d = defer_calc()
+        d = defer_calc(self.count_iteration, self.count_run)
         d.callback(None)
 
         self.assertEqual(self.call_count, self.count_iteration)
@@ -93,12 +93,12 @@ class TwistedTimeitTest(unittest.TestCase):
 
         @defer.inlineCallbacks
         @twisted_timeit
-        def yelding_calculation():
-            for i in xrange(self.count_iteration):
+        def yelding_calculation(count_iteration, count_run):
+            for i in xrange(count_iteration):
                 self.call_long += 1
-                yield long_calculation(self.count_run)
+                yield long_calculation(count_run)
 
-        yelding_calculation()
+        yelding_calculation(self.count_iteration, self.count_run)
         self.assertEqual(self.count_iteration, self.call_long)
         result_log = stdout.getvalue()
         self.assertEqual('Time for iterator yelding_calculation.send' in result_log, True)
@@ -112,12 +112,12 @@ class TwistedTimeitTest(unittest.TestCase):
 
         @twisted_timeit
         @defer.inlineCallbacks
-        def yelding_calculation():
-            for i in xrange(self.count_iteration):
+        def yelding_calculation(count_iteration, count_run):
+            for i in xrange(count_iteration):
                 self.call_long += 1
-                yield long_calculation(self.count_run)
+                yield long_calculation(count_run)
 
-        yelding_calculation()
+        yelding_calculation(self.count_iteration, self.count_run)
         self.assertEqual(self.count_iteration, self.call_long)
         result_log = stdout.getvalue()
         self.assertEqual('Time for function yelding_calculation' in result_log, True)
